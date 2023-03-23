@@ -91,6 +91,9 @@ type Controller struct {
 	mcpLister       mcfglistersv1.MachineConfigPoolLister
 	mcpListerSynced cache.InformerSynced
 
+	mcLister       mcfglistersv1.MachineConfigLister
+	mcListerSynced cache.InformerSynced
+
 	featLister       oselistersv1.FeatureGateLister
 	featListerSynced cache.InformerSynced
 
@@ -111,6 +114,7 @@ func New(
 	mcpInformer mcfginformersv1.MachineConfigPoolInformer,
 	ccInformer mcfginformersv1.ControllerConfigInformer,
 	mkuInformer mcfginformersv1.KubeletConfigInformer,
+	mcInformer mcfginformersv1.MachineConfigInformer,
 	featInformer oseinformersv1.FeatureGateInformer,
 	nodeConfigInformer oseinformersv1.NodeInformer,
 	apiserverInformer oseinformersv1.APIServerInformer,
@@ -156,6 +160,9 @@ func New(
 	ctrl.mcpLister = mcpInformer.Lister()
 	ctrl.mcpListerSynced = mcpInformer.Informer().HasSynced
 
+	ctrl.mcLister = mcInformer.Lister()
+	ctrl.mcListerSynced = mcInformer.Informer().HasSynced
+
 	ctrl.ccLister = ccInformer.Lister()
 	ctrl.ccListerSynced = ccInformer.Informer().HasSynced
 
@@ -181,7 +188,7 @@ func (ctrl *Controller) Run(workers int, stopCh <-chan struct{}) {
 	defer ctrl.featureQueue.ShutDown()
 	defer ctrl.nodeConfigQueue.ShutDown()
 
-	if !cache.WaitForCacheSync(stopCh, ctrl.mcpListerSynced, ctrl.mckListerSynced, ctrl.ccListerSynced, ctrl.featListerSynced, ctrl.apiserverListerSynced) {
+	if !cache.WaitForCacheSync(stopCh, ctrl.mcpListerSynced, ctrl.mcListerSynced, ctrl.mckListerSynced, ctrl.ccListerSynced, ctrl.featListerSynced, ctrl.apiserverListerSynced) {
 		return
 	}
 
